@@ -8,9 +8,9 @@ The root manager scopes and assigns work, handles dependencies and decisions, su
 
 Confirm that this actual client/session exposes native spawn, message/follow-up, bounded wait and interrupt controls. A backend health result or `client=vscode` label does not demonstrate frontend support. Do not substitute shell-launched agent fleets, desktop UI automation, or sidebar chats for missing native capabilities. The service stores metadata; it cannot spawn, inspect, stop or wake agents.
 
-For an MCP installation, call `coordination_health` on the configured `conductor_coordination` server and pass action arguments directly as tool inputs. Local MCP mode uses private SQLite on this computer; no shell command, SSH host or service key is needed. Hosted MCP mode uses the configured service connection.
+For an MCP installation, call `coordination_health` on the configured `conductor_coordination` server and pass action arguments directly as tool inputs. Local MCP mode uses private SQLite on this computer; no SSH host or service key is needed. Hosted MCP mode uses the configured service connection.
 
-For an SSH command installation, on Windows PowerShell call `& "$HOME\.codex\conductor-client\conductor.ps1" -Action coordination_health`. For a request with arguments, add `-Arguments @{workload_id='example'; limit=25}`. On Linux/macOS, use the installed `conductor.sh coordination_health` and pass a JSON object as its second argument for other actions. This command uses the current user's SSH configuration and VM login.
+For an SSH command installation, on Windows PowerShell call `& "$HOME\.codex\conductor-client\conductor.ps1" -Action coordination_health`. For arguments, add `-Arguments @{workload_id='example'; limit=25}`. On Linux/macOS, use the installed `conductor.sh coordination_health` and pass a JSON object as its second argument. This command uses the current user's SSH configuration and VM login.
 
 Read [actions.md](actions.md) only when coordinating. Check health and native controls before dispatch. If delegated work cannot proceed, report what is unavailable instead of silently becoming the implementation worker. A failed ledger does not block unrelated direct single-task work.
 
@@ -35,7 +35,7 @@ Assess actual worker results. Give findings to the responsible worker or assign 
 
 ## Completion and recovery
 
-Every implementation task needs independent completed **review or test** coverage and completed integration coverage; coverage workers' native IDs must differ from the author. Using both review and test is welcome where useful, but the server requires at least one of them plus integration. All required tasks must complete and no optional task may remain active. Call `coordination_complete` only after those gates and real evidence pass; successful completion already ends the lease.
+Every implementation task needs independent completed **review or test** coverage and completed integration coverage; coverage workers' native IDs must differ from the author. Using both review and test is welcome where useful, but the server requires at least one of them plus integration. For modest changes, the same independent native worker may perform verification and then integration as separate sequential tasks. Complete its review/test task before assigning its integration task, whose dependencies include that review/test task as well as the covered implementations. Give each task its own evidence; do not count one generic report as proof of both. Use a distinct integration worker when conflicts, risk, context or workload justify it. All required tasks must complete and no optional task may remain active. Call `coordination_complete` only after those gates and real evidence pass; successful completion already ends the lease.
 
 Use `coordination_release` for unfinished pauses or intentional handoffs, after recording current state. Release/expiry fences metadata writes; it does not stop workers. If ownership is lost, stop writes and further dispatch immediately.
 

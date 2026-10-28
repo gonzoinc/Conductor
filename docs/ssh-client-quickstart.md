@@ -21,3 +21,18 @@ For a simple connection check after setup, run:
 ```
 
 If setup stops, read the error shown in PowerShell, fix the SSH login or VM access, then run the same installer file again. No clone or new download is needed unless the file itself is updated.
+
+## Update an existing Windows SSH client
+
+Finish active work. Download the newest raw installer and run it again:
+
+```powershell
+Invoke-WebRequest 'https://raw.githubusercontent.com/gonzoinc/Conductor/main/install-ssh-client.ps1' -OutFile "$HOME\Downloads\install-ssh-client.ps1"
+powershell -ExecutionPolicy Bypass -File "$HOME\Downloads\install-ssh-client.ps1"
+```
+
+It reuses the saved SSH alias, checks access, backs up the existing skill under
+`~/.codex/conductor-client/skill-backups/`, then installs the current payload.
+For an isolated profile, supply the same `-TestRoot` as before. It does not
+upgrade the VM database. Restart desktop/reload VS Code after active work ends
+and start new chats to load the new skill.

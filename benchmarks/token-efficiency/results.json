@@ -1,0 +1,107 @@
+{
+  "task_sha256": "092785f8d0346b61c57c76626f4d6611a9b26208140c00132d484205eac359f8",
+  "model": "gpt-6-sol",
+  "effort": "medium",
+  "background_context_chars": 16000,
+  "paired_runs": 1,
+  "fixed_team": true,
+  "prepared_handoffs": true,
+  "team_validation": {
+    "before": {
+      "valid": true,
+      "worker_count": 5,
+      "observed_peak_workers": 2,
+      "roles": [
+        "duration_impl",
+        "duration_review",
+        "integration_verify",
+        "slug_impl",
+        "slug_review"
+      ],
+      "problems": []
+    },
+    "after": {
+      "valid": true,
+      "worker_count": 5,
+      "observed_peak_workers": 2,
+      "roles": [
+        "duration_impl",
+        "duration_review",
+        "integration_verify",
+        "slug_impl",
+        "slug_review"
+      ],
+      "problems": []
+    }
+  },
+  "metrics": [
+    {
+      "metric": "All agents",
+      "before": 6,
+      "after": 6,
+      "reduction_percent": 0.0
+    },
+    {
+      "metric": "Model requests",
+      "before": 46,
+      "after": 43,
+      "reduction_percent": 6.52
+    },
+    {
+      "metric": "input_tokens",
+      "before": 1630820,
+      "after": 1237678,
+      "reduction_percent": 24.11
+    },
+    {
+      "metric": "cached_input_tokens",
+      "before": 1592576,
+      "after": 1175552,
+      "reduction_percent": 26.19
+    },
+    {
+      "metric": "uncached_input_tokens",
+      "before": 38244,
+      "after": 62126,
+      "reduction_percent": -62.45
+    },
+    {
+      "metric": "output_tokens",
+      "before": 8924,
+      "after": 9961,
+      "reduction_percent": -11.62
+    },
+    {
+      "metric": "reasoning_output_tokens",
+      "before": 1086,
+      "after": 1187,
+      "reduction_percent": -9.3
+    },
+    {
+      "metric": "input_plus_output_tokens",
+      "before": 1639744,
+      "after": 1247639,
+      "reduction_percent": 23.91
+    },
+    {
+      "metric": "Elapsed seconds",
+      "before": 210.768,
+      "after": 220.861,
+      "reduction_percent": -4.79
+    }
+  ],
+  "acceptance": "both passed",
+  "objective": {
+    "fewer_total_tokens": true,
+    "no_longer_runtime": false,
+    "less_uncached_input": false,
+    "met_both_primary": false
+  },
+  "limits": [
+    "One pair is not a statistical estimate of future savings.",
+    "Cache state and model sampling are not controlled.",
+    "CLI native agents with a test-local ledger transport; not desktop/VS Code or live SSH acceptance."
+  ],
+  "owner_accepted_runtime_tradeoff": true,
+  "date": "2026-10-28"
+}

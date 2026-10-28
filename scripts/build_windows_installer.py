@@ -15,6 +15,7 @@ FILES = (
     "skills/conductor-coordinator/SKILL.md",
     "skills/conductor-coordinator/references/workflow.md",
     "skills/conductor-coordinator/references/actions.md",
+    "skills/conductor-coordinator/references/worker-handoff.md",
 )
 START = "# BEGIN EMBEDDED CONDUCTOR FILES\n"
 END = "# END EMBEDDED CONDUCTOR FILES"

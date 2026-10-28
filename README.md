@@ -6,6 +6,21 @@ A portable shared task ledger and workflow for native Codex agents. For one cohe
 
 **Public preview.** This is a custom coordination integration, not an installation of the upstream project's terminal runtime. The service stores coordination metadata; Codex runs and supervises workers in its native client. It cannot spawn agents itself or keep a manager running after the client closes.
 
+## Measured token savings
+
+Complete worker handoffs and predefined test commands reduced total recorded tokens by **23.9%** in a controlled five-worker comparison. Both runs used the same tasks, model, reasoning effort, roles, concurrency and acceptance tests; all checks passed.
+
+| Measurement | Before | Updated handoffs |
+| --- | ---: | ---: |
+| Workers | 5 | 5 |
+| Total tokens, manager plus workers | 1,639,744 | **1,247,639 (23.9% fewer)** |
+| Model requests | 46 | 43 |
+| Runtime | 3m 31s | 3m 41s (+10 seconds) |
+| Uncached input tokens | 38,244 | 62,126 |
+| Output tokens | 8,924 | 9,961 |
+
+Workers receive their source boundaries, verified environment facts and exact test commands together, avoiding repeated setup, improvised test expectations and disposable cache cleanup. The ten-second runtime increase was accepted as a useful tradeoff for the lower total token count. This is one measured pair, not a guaranteed saving on every task: uncached input increased 62.5%, so the 23.9% total-token reduction does not establish an equivalent billing or account-allowance saving. See the [benchmark results and reproduction steps](docs/token-benchmark-results.md).
+
 ## Local macOS setup
 
 For a single user on a Mac, run this from the checkout as your normal user:
@@ -27,6 +42,36 @@ On the Linux VM, clone this repository and run `bash install-ssh-vm.sh`. For Sal
 On Windows, follow the [one-file client setup](docs/ssh-client-quickstart.md): download only `install-ssh-client.ps1` from this repository and run it. Enter the VM SSH alias, hostname or IP. The installer verifies the login and ledger, then installs only a PowerShell command and Codex skill for this user. It creates no MCP configuration; when it recognizes a previous Conductor MCP installation, it backs up and removes that entry so the old tools no longer load. See [SSH command deployment](docs/ssh-command.md). Maintainers regenerate the script payload with `python3 scripts/build_windows_installer.py` after changing the client command or skill.
 
 **The previous MCP installers below remain available for migration and existing installations.** Do not run them for the SSH command setup.
+
+## Updating Windows and Mac clients
+
+Finish active Conductor work before updating. These handoff changes are in the client skill; they need no VM/database upgrade.
+
+### Windows: one-file SSH installation
+
+Download and rerun the latest installer in PowerShell:
+
+```powershell
+Invoke-WebRequest 'https://raw.githubusercontent.com/gonzoinc/Conductor/main/install-ssh-client.ps1' -OutFile "$HOME\Downloads\install-ssh-client.ps1"
+powershell -ExecutionPolicy Bypass -File "$HOME\Downloads\install-ssh-client.ps1"
+```
+
+It reuses your saved VM SSH alias, verifies the connection, backs up the installed skill and copies the updated command and skill. If asked for a host, use the same alias or `login@host` as before. For an isolated installation, pass the same `-TestRoot` used originally. See [Windows setup and updates](docs/ssh-client-quickstart.md).
+
+### Mac: local installation from a checkout
+
+In your existing Conductor checkout, run:
+
+```bash
+git pull --ff-only
+python3 -B scripts/update_skill.py
+```
+
+The updater recognizes an installed repository version, saves a full skill backup, then replaces only the skill. It preserves the local database, MCP configuration, credentials and Python environment. It stops without replacing unrecognized/customized files. Keep your checkout in place; you do not need to rerun the initial installer for this skill-only update.
+
+For a **Windows local MCP installation** with a checkout, use the same `git pull --ff-only` followed by `py -3 -B scripts/update_skill.py` instead of the SSH installer. Custom profiles can select `--codex-home PATH` and `--skills-dir PATH` (the directory containing `conductor-coordinator`).
+
+After the update, restart Codex desktop and reload the VS Code window when active work has finished, then start new chats. Both clients must use the same updated user profile. Updater output reports the skill and backup paths. Actual macOS execution of the new updater remains a manual acceptance check; its file-update behavior has automated tests.
 
 ## Previous MCP setup
 
