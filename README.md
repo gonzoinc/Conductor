@@ -1,5 +1,7 @@
 # Conductor
 
+![An orchestral conductor guiding distinct luminous workstreams toward one shared outcome](assets/conductor-hero.png)
+
 A portable shared task ledger and workflow for native Codex agents. For one coherent task, the primary agent works directly. For multiple distinct workstreams, it manages native workers, tracks dependencies and evidence, and reports verified results.
 
 **Public preview.** This is a custom coordination integration, not an installation of the upstream project's terminal runtime. The service stores coordination metadata; Codex runs and supervises workers in its native client. It cannot spawn agents itself or keep a manager running after the client closes.
