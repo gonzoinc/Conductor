@@ -1,8 +1,8 @@
-# Conductor command arguments
+# Conductor action arguments
 
-Pass an `-Arguments` PowerShell hashtable to `conductor.ps1 -Action NAME`. On Bash, pass a JSON object as the second argument to `conductor.sh NAME`. Output is one JSON result. A nonzero exit means no success was confirmed; for uncertain writes, inspect using the same operation ID before retrying.
+For MCP installations, call the named tool on the configured `conductor_coordination` server with the arguments below as tool inputs. Check the tool error flag before treating a call as successful. For SSH command installations, pass an `-Arguments` PowerShell hashtable to `conductor.ps1 -Action NAME`. On Bash, pass a JSON object as the second argument to `conductor.sh NAME`. Command output is one JSON result; a nonzero exit means no success was confirmed. For uncertain writes, inspect using the same operation ID before retrying.
 
-Every protected write uses `workload_id`, `manager_id`, integer `epoch`, and unique `operation_id` unless noted. Use the exact returned epoch. The VM derives your account from the current SSH login.
+Every protected write uses `workload_id`, `manager_id`, integer `epoch`, and unique `operation_id` unless noted. Use the exact returned epoch. Local MCP mode uses this user's local account domain; hosted MCP uses the configured account credential, and the SSH command derives your account from the current SSH login.
 
 | Action | Additional arguments |
 | --- | --- |

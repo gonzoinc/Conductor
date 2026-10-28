@@ -23,7 +23,7 @@ SPEC.loader.exec_module(installer)
 class ClientSetupTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
-        self.root = Path(self.temp.name)
+        self.root = Path(self.temp.name).resolve()
         self.codex = self.root / "codex home"
         self.skills = self.root / "skills"
         self.token = "safe-test-credential-" + "x" * 40
@@ -66,6 +66,31 @@ class ClientSetupTests(unittest.TestCase):
         self.assertFalse(self.install()["changed_config"])
         self.assertEqual((self.codex / "config.toml").read_bytes(), config)
         self.assertEqual((self.codex / "config.toml.before-conductor").read_bytes(), original)
+
+    def test_local_user_install_preserves_ledger_and_explains_mcp_transport(self):
+        self.codex.mkdir()
+        original = b'# shared user settings\nmodel = "example"\n'
+        config = self.codex / 'config.toml'
+        config.write_bytes(original)
+        options = dict(mode='local', url=None, token=None, data_root=self.root / 'state')
+        self.install(**options)
+        settings = json.loads((self.codex / 'conductor-coordination/client.json').read_text())
+        self.assertEqual(settings['mode'], 'local')
+        database = Path(settings['db_path'])
+        from conductor_coordination.coordination_store import Store
+        store = Store(database)
+        store.claim('retained-work', 'manager', 'desktop', 'claim-1', 300)
+        installed_config = config.read_bytes()
+        self.assertFalse(self.install(**options)['changed_config'])
+        self.assertEqual(config.read_bytes(), installed_config)
+        self.assertEqual((self.codex / 'config.toml.before-conductor').read_bytes(), original)
+        self.assertEqual(Store(database).snapshot('retained-work')['workload']['manager'], 'manager')
+        self.assertFalse((self.codex / 'conductor-coordination/service-token').exists())
+        skill = self.skills / 'conductor-coordinator'
+        self.assertIn('conductor_coordination', (skill / 'SKILL.md').read_text())
+        self.assertIn('no shell command', (skill / 'references/workflow.md').read_text())
+        if os.name != 'nt':
+            self.assertEqual(stat.S_IMODE(database.stat().st_mode), 0o600)
 
     def test_installer_command_uses_token_file_without_printing_credential(self):
         credential = self.root / "incoming-token"

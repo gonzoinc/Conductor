@@ -11,7 +11,7 @@ For multiple distinct tasks or workstreams, act as manager: scope assignments, o
 
 If you are already an assigned worker, execute your bounded assignment and report to your parent. Seeing this skill does not make you another manager or authorize recursive delegation.
 
-Before managing or recovering delegated work, read [references/workflow.md](references/workflow.md) and its compact [command arguments](references/actions.md). Use the installed Conductor command through the current user's shell and SSH settings. It does not install Python, export a service key, or give agents a separate SSH identity. Confirm native spawn/message/wait/interrupt capability and command health before dispatch. If either is unavailable, report the missing capability; direct single-task work remains available.
+Before managing or recovering delegated work, read [references/workflow.md](references/workflow.md) and its compact [action arguments](references/actions.md). With the MCP installation, call the coordination tools exposed by the configured `conductor_coordination` server; local mode stores the ledger on this computer and needs no SSH host. With the SSH command installation, use the installed Conductor command through the current user's shell and SSH settings. Confirm native spawn/message/wait/interrupt capability and coordination health before dispatch. If either is unavailable, report the missing capability; direct single-task work remains available.
 
 Use native subagents, not new user-owned sidebar chats or an invented desktop-control bridge. Track exact returned worker IDs. Stop expansion if ownership is lost, or if a spawned worker cannot be recorded. An expired lease or missing worker in another client does not prove the worker stopped.
 

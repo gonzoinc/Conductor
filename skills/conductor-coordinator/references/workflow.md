@@ -8,7 +8,11 @@ The root manager scopes and assigns work, handles dependencies and decisions, su
 
 Confirm that this actual client/session exposes native spawn, message/follow-up, bounded wait and interrupt controls. A backend health result or `client=vscode` label does not demonstrate frontend support. Do not substitute shell-launched agent fleets, desktop UI automation, or sidebar chats for missing native capabilities. The service stores metadata; it cannot spawn, inspect, stop or wake agents.
 
-On Windows PowerShell, call `& "$HOME\.codex\conductor-client\conductor.ps1" -Action coordination_health`. For a request with arguments, add `-Arguments @{workload_id='example'; limit=25}`. On Linux/macOS, use the installed `conductor.sh coordination_health` and pass a JSON object as its second argument for other actions. Read [actions.md](actions.md) only when coordinating. The command uses the current user's SSH configuration and VM login. Check health and native controls before dispatch. If delegated work cannot proceed, report what is unavailable instead of silently becoming the implementation worker. A failed ledger does not block unrelated direct single-task work.
+For an MCP installation, call `coordination_health` on the configured `conductor_coordination` server and pass action arguments directly as tool inputs. Local MCP mode uses private SQLite on this computer; no shell command, SSH host or service key is needed. Hosted MCP mode uses the configured service connection.
+
+For an SSH command installation, on Windows PowerShell call `& "$HOME\.codex\conductor-client\conductor.ps1" -Action coordination_health`. For a request with arguments, add `-Arguments @{workload_id='example'; limit=25}`. On Linux/macOS, use the installed `conductor.sh coordination_health` and pass a JSON object as its second argument for other actions. This command uses the current user's SSH configuration and VM login.
+
+Read [actions.md](actions.md) only when coordinating. Check health and native controls before dispatch. If delegated work cannot proceed, report what is unavailable instead of silently becoming the implementation worker. A failed ledger does not block unrelated direct single-task work.
 
 ## Ownership and task graph
 

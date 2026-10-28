@@ -14,13 +14,20 @@ ROOT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location('conductor_bootstrap', ROOT / 'scripts/bootstrap.py')
 BOOTSTRAP = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(BOOTSTRAP)
+SUPPORT_SPEC = importlib.util.spec_from_file_location('install_support', ROOT / 'scripts/install_support.py')
+SUPPORT = importlib.util.module_from_spec(SUPPORT_SPEC)
+SUPPORT_SPEC.loader.exec_module(SUPPORT)
+MAC_SPEC = importlib.util.spec_from_file_location('install_macos', ROOT / 'scripts/install_macos.py')
+MAC = importlib.util.module_from_spec(MAC_SPEC)
+with patch.dict(sys.modules, {'bootstrap': BOOTSTRAP, 'install_support': SUPPORT}):
+    MAC_SPEC.loader.exec_module(MAC)
 
 
 class InstallerTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
-        self.root = Path(self.temporary.name) / 'source with spaces'
+        self.root = (Path(self.temporary.name) / 'source with spaces').resolve()
         self.root.mkdir()
         self.normal = Path(self.temporary.name) / 'normal-user'
         (self.normal / '.codex').mkdir(parents=True)
@@ -135,7 +142,7 @@ class InstallerTests(unittest.TestCase):
     def test_cancelled_dependency_install_stops_then_allows_retry(self):
         def cancel(command, **kwargs):
             self.fake_run(command, **kwargs)
-            if kwargs['stage'] == 'Installing client dependencies':
+            if kwargs['stage'] == 'Installing legacy MCP client dependencies':
                 raise subprocess.CalledProcessError(130, command)
         self.run_mock.side_effect = cancel
         stdout, stderr = io.StringIO(), io.StringIO()
@@ -196,6 +203,59 @@ class InstallerTests(unittest.TestCase):
         with patch.object(sys, 'platform', 'linux'), self.assertRaises(ValueError):
             BOOTSTRAP.setup(self.root, ['server', '--project', '../existing'])
         self.assertEqual(self.calls, [])
+
+
+class MacInstallerTests(unittest.TestCase):
+    def test_shared_user_setup_is_verified_before_success(self):
+        calls = []
+        home = ROOT / '.codex/example-home'
+        output = io.StringIO()
+        with patch.object(sys, 'platform', 'darwin'), patch.object(os, 'geteuid', return_value=501, create=True), \
+             patch.dict(os.environ, {'CODEX_HOME': str(home)}), \
+             patch.object(BOOTSTRAP, 'prepare_runtime', return_value=ROOT / '.codex/conductor-venv/bin/python'), \
+             patch.object(MAC.subprocess, 'run', side_effect=lambda *args, **kwargs: calls.append('install')) as install, \
+             patch.object(MAC, 'verify_bridge', side_effect=lambda *args: calls.append('verify')) as verify, \
+             redirect_stdout(output):
+            MAC.setup(ROOT)
+        self.assertEqual(calls, ['install', 'verify'])
+        command = install.call_args.args[0]
+        self.assertEqual(command[command.index('--mode') + 1], 'local')
+        self.assertEqual(command[command.index('--codex-home') + 1], str(home))
+        self.assertEqual(command[command.index('--skills-dir') + 1], str(Path.home() / '.agents/skills'))
+        verify.assert_called_once_with(ROOT / '.codex/conductor-venv/bin/python',
+                                       home / 'conductor-coordination/client.json')
+        self.assertIn('setup complete', output.getvalue())
+        self.assertIn('VS Code', output.getvalue())
+
+    def test_failed_health_check_does_not_report_success(self):
+        output = io.StringIO()
+        with patch.object(sys, 'platform', 'darwin'), patch.object(os, 'geteuid', return_value=501, create=True), \
+             patch.object(BOOTSTRAP, 'prepare_runtime', return_value=Path(sys.executable)), \
+             patch.object(MAC.subprocess, 'run'), \
+             patch.object(MAC, 'verify_bridge', side_effect=ValueError('health failed')), redirect_stdout(output):
+            with self.assertRaisesRegex(ValueError, 'health failed'):
+                MAC.setup(ROOT)
+        self.assertNotIn('setup complete', output.getvalue())
+
+    def test_unsupported_platform_or_root_stops_before_changes(self):
+        for platform, uid in [('linux', 501), ('darwin', 0)]:
+            with self.subTest(platform=platform, uid=uid), patch.object(sys, 'platform', platform), \
+                 patch.object(os, 'geteuid', return_value=uid, create=True), \
+                 patch.object(BOOTSTRAP, 'prepare_runtime') as setup, patch.object(MAC, 'verify_bridge') as verify:
+                with self.assertRaises(ValueError):
+                    MAC.setup(ROOT)
+                setup.assert_not_called()
+                verify.assert_not_called()
+
+    @unittest.skipIf(os.name == 'nt', 'macOS shell entry point')
+    def test_help_and_invalid_arguments_do_not_install(self):
+        result = subprocess.run(['bash', str(ROOT / 'install-macos.sh'), '--help'],
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('VS Code', result.stdout)
+        result = subprocess.run(['bash', str(ROOT / 'install-macos.sh'), '--unknown'],
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 2)
 
 
 if __name__ == '__main__':

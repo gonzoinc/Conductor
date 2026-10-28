@@ -4,6 +4,18 @@ A portable shared task ledger and workflow for native Codex agents. For one cohe
 
 **Public preview.** This is a custom coordination integration, not an installation of the upstream project's terminal runtime. The service stores coordination metadata; Codex runs and supervises workers in its native client. It cannot spawn agents itself or keep a manager running after the client closes.
 
+## Local macOS setup
+
+For a single user on a Mac, run this from the checkout as your normal user:
+
+```bash
+bash install-macos.sh
+```
+
+Requires Python 3.11+ with `venv`/`pip` and internet access to install Python packages. The script creates a private virtual environment inside this checkout, installs a local SQLite MCP bridge, and verifies tool discovery and health. It adds the `conductor_coordination` connection to `~/.codex/config.toml` and the skill to `~/.agents/skills`, shared by Codex desktop and the Codex VS Code extension. Existing unrelated settings are preserved and an existing configuration is backed up before modification. No sudo, VM, Docker, SSH or service key is needed.
+
+Keep this checkout in place. When active work is finished, restart Codex desktop and reload the VS Code window, then start new chats. Both clients must use the same Codex home; custom `CODEX_HOME` profiles need the same setting in each client. See [macOS setup details](docs/client-setup.md#local-macos-command-line-setup) for paths, reruns and verification limits.
+
 ## SSH command setup (recommended hosted path)
 
 Conductor can run without MCP, a client Python runtime, copied service keys, or a continuously running application process. The VM stores task metadata in SQLite or an existing MySQL database. Codex desktop and the VS Code extension use the same installed skill and command in the user's shell. The command uses that user's existing SSH configuration, including keys, jump hosts and enterprise access tools. The VM authorizes the authenticated SSH login through `conductor-enroll` (or the configured enrollment group). Native Codex controls still spawn and supervise workers.

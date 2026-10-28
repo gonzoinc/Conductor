@@ -2,13 +2,28 @@
 
 Codex needs its own sign-in and native subagent controls. The stdio MCP bridge can use a private SQLite ledger on this computer, or connect to a hosted service. Local mode needs no VM, container, listener, or service key; the bridge runs only while Codex uses it. Hosted mode reads a private per-user key file. No bearer token is stored in TOML or passed as a command argument.
 
-Automated client setup and stdio protocol checks have run on Linux/Python 3.13 and Windows/Python 3.14 with local private storage. Windows tests include private ACL creation and rejection of a broadly readable credential. macOS instructions follow the POSIX path but have not been executed on macOS. These checks do not establish actual desktop or VS Code native delegation acceptance.
+Automated client setup and stdio protocol checks cover Linux and Windows with local private storage. Windows tests include private ACL creation and rejection of a broadly readable credential. An isolated macOS/Python 3.14 install and unchanged rerun passed, including discovery of 14 tools, coordination health, configuration preservation and backup checks. The macOS command below verifies its installed stdio bridge before reporting success. These checks do not establish actual desktop or VS Code native delegation acceptance.
 
 ## Start here if this is your first installation
 
 For a single user on Windows, use the [local-only graphical installer](windows-gui-setup.md). For a shared VM, first run [the VM installer](host-install.md) on that Linux host, then give each client user their own exported key file. The hosted client CLI below connects Codex to the running service; the Windows GUI does not install or connect the VM edition. The older guided command-line wizard is documented in the [guided walkthrough](guided-setup.md).
 
 Choose **New installation**, then **On this computer** for one-person local mode or **Linux host** for a shared service. The remaining sections describe advanced/manual provisioning and configuration locations.
+
+## Local macOS command-line setup
+
+From a stable checkout on a local disk, run `bash install-macos.sh` as your normal user. It installs the fully local, single-user edition into your normal Codex profile for both desktop and the VS Code extension. It requires macOS, Python 3.11+ with `venv`/`pip`, and internet access for package downloads. It does not require sudo or configure a background service. If `python3` selects an older interpreter, use `CONDUCTOR_PYTHON=/path/to/python3.12 bash install-macos.sh` to choose an installed compatible Python.
+
+The script uses the existing client installer and creates:
+
+- A private Python environment in the checkout's `.codex/conductor-venv` directory. Keep the checkout and this environment in place because the connection records their absolute path.
+- A `conductor_coordination` MCP entry in `~/.codex/config.toml`, or `$CODEX_HOME/config.toml` when set. Both desktop and the VS Code extension use that user configuration; no separate VS Code MCP entry is needed.
+- The self-contained skill in `~/.agents/skills/conductor-coordinator` and private connection settings under the selected Codex home's `conductor-coordination` directory.
+- A private SQLite ledger at `${XDG_STATE_HOME:-~/.local/state}/conductor/tasks.sqlite3`, shared by both clients. Keep it on a local disk outside synced/network folders.
+
+Existing unrelated configuration is preserved byte for byte and backed up to `config.toml.before-conductor` when an existing file changes. An identical rerun preserves settings and ledger data. A conflicting Conductor connection, skill, settings file, or unowned nonempty data directory stops installation for manual review. Resolve the conflict before rerunning; the script does not silently replace it. A failed package download can be retried with the same command.
+
+Before reporting completion, the script starts the installed bridge, initializes a real stdio MCP session, discovers its 14 tools and calls `coordination_health`. This does not open or restart either app. After active work is finished, restart Codex desktop, reload the VS Code window and start new chats. If using a custom `CODEX_HOME`, ensure both applications actually run with that same profile; exporting it in a terminal does not change an already-running app. Run the [quick setup check](acceptance.md#quick-setup-check) in each client to verify native worker support. Installation cannot enable missing native controls or override organization policy.
 
 ## Local mode on this computer
 
@@ -20,7 +35,7 @@ Advanced one-line example from the checkout, using an isolated desktop profile:
 bash install.sh client --mode local --profile desktop
 ```
 
-The local bridge opens SQLite directly for each MCP operation. SQLite WAL and transactional writes support multiple Codex bridge processes on the same computer; manager leases still prevent conflicting ownership of one workload. No process stays running after the clients close. Back up the database with SQLite's backup API while it is active; copying only `tasks.sqlite3` can omit uncheckpointed WAL data. macOS uses the POSIX state-directory convention, but local-mode installation and filesystem checks have not yet been validated on macOS.
+The local bridge opens SQLite directly for each MCP operation. SQLite WAL and transactional writes support multiple Codex bridge processes on the same computer; manager leases still prevent conflicting ownership of one workload. No process stays running after the clients close. Back up the database with SQLite's backup API while it is active; copying only `tasks.sqlite3` can omit uncheckpointed WAL data. macOS uses the POSIX state-directory convention; keep the ledger on local storage.
 
 ## Install on the computer running Codex
 
