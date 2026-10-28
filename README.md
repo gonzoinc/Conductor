@@ -1,6 +1,6 @@
 # Conductor
 
-![An orchestral conductor guiding distinct luminous workstreams toward one shared outcome](assets/conductor-hero.png)
+![Conductor logo over an orchestral conductor guiding distinct workstreams](assets/conductor-hero-with-logo.png)
 
 A portable shared task ledger and workflow for native Codex agents. For one coherent task, the primary agent works directly. For multiple distinct workstreams, it manages native workers, tracks dependencies and evidence, and reports verified results.
 
