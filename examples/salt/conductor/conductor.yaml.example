@@ -1,0 +1,27 @@
+# Root-owned and readable by the conductor service group (0640).
+# Salt should manage this file and the private MySQL password file.
+conductor:
+  service_user: conductor
+  install_dir: /opt/conductor
+  state_dir: /var/lib/conductor
+  bind: 127.0.0.1
+  port: 8012
+  initial_users: [alice]
+  enrollment_group: conductor-enroll
+database:
+  engine: sqlite
+  mode: create
+  path: /var/lib/conductor/tasks.sqlite3
+
+# For a Salt-managed MySQL deployment, replace the database mapping with:
+# database:
+#   engine: mysql
+#   mode: existing
+#   host: mysql.example.internal
+#   port: 3306
+#   name: conductor
+#   user: conductor
+#   password_file: /etc/conductor/mysql-password
+#   ssl_ca: /etc/conductor/mysql-ca.pem
+# Provision the database and application account first on the MySQL host.
+# Point every Conductor service node at the same database/failover endpoint.

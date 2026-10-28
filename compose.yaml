@@ -1,0 +1,43 @@
+services:
+  service:
+    build: .
+    restart: unless-stopped
+    user: "10001:10001"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    environment:
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: "8012"
+      CONDUCTOR_DB: /state/data/tasks.sqlite3
+      CONDUCTOR_TOKEN_FILE: /state/service-token
+      CONDUCTOR_HEALTH_TOKEN_FILE: /state/health-token
+      CONDUCTOR_BACKUP_DIR: /backups
+    ports:
+      - target: 8012
+        published: "${CONDUCTOR_PORT:-8012}"
+        host_ip: "${CONDUCTOR_BIND:-127.0.0.1}"
+        protocol: tcp
+    volumes:
+      - state:/state
+      - backups:/backups
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import json,os; from pathlib import Path; from urllib.request import Request,build_opener,ProxyHandler;
+          credential=Path(os.environ['CONDUCTOR_HEALTH_TOKEN_FILE']).read_text().strip();
+          request=Request('http://127.0.0.1:8012/healthz',headers={'Authorization':'Bearer '+credential});
+          response=build_opener(ProxyHandler({})).open(request,timeout=3);
+          assert json.load(response).get('status')=='ok'; response.close()
+      interval: 15s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+volumes:
+  state:
+  backups:

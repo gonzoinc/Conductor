@@ -1,0 +1,4 @@
+interface:
+  display_name: "Conductor Coordinator"
+  short_description: "Route single tasks or coordinate native workers"
+  default_prompt: "Use $conductor-coordinator to choose direct execution or coordinate the distinct workstreams in this request."

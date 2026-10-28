@@ -1,0 +1,9 @@
+*
+!Dockerfile
+!pyproject.toml
+!UPSTREAM_LICENSE.txt
+!upstream-lock.json
+!src/
+!src/**
+**/__pycache__/
+**/*.pyc

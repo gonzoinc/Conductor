@@ -1,0 +1,32 @@
+{
+  "repository": "https://github.com/kunchenguid/firstmate",
+  "revision": "6c87d7bb7d986dae2869cbbf090875ccdda4ea1a",
+  "license": "MIT",
+  "files": [
+    {
+      "path": "bin/fm-transition-lib.sh",
+      "sha256": "d0a3d09582871f70a742bd2e90d91aaab421cc8e30cd3c3a0239d536e246faa0",
+      "url": "https://raw.githubusercontent.com/kunchenguid/firstmate/6c87d7bb7d986dae2869cbbf090875ccdda4ea1a/bin/fm-transition-lib.sh"
+    },
+    {
+      "path": "bin/fm-brief.sh",
+      "sha256": "d0b3fad32bc35e3156e0a17cf78d1f82be535152c134d4d51055351fa1063586",
+      "url": "https://raw.githubusercontent.com/kunchenguid/firstmate/6c87d7bb7d986dae2869cbbf090875ccdda4ea1a/bin/fm-brief.sh"
+    },
+    {
+      "path": "bin/fm-crew-state.sh",
+      "sha256": "71869739c251c21f8716be3b575e41328f414abded6df9aae8c43389a98bc7d4",
+      "url": "https://raw.githubusercontent.com/kunchenguid/firstmate/6c87d7bb7d986dae2869cbbf090875ccdda4ea1a/bin/fm-crew-state.sh"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "1d67d8fea74b30be6b4de1e1eec0d41f5ed7c7d0215c79d873c3facef96e3896",
+      "url": "https://raw.githubusercontent.com/kunchenguid/firstmate/6c87d7bb7d986dae2869cbbf090875ccdda4ea1a/AGENTS.md"
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "945016bd37e1ba7211622ef60ee1d23ab727896ba7710edd21e8fbe983863969",
+      "url": "https://raw.githubusercontent.com/kunchenguid/firstmate/6c87d7bb7d986dae2869cbbf090875ccdda4ea1a/LICENSE"
+    }
+  ]
+}

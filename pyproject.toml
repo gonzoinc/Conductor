@@ -1,0 +1,20 @@
+[project]
+name = "conductor-codex"
+version = "0.4.0b1"
+description = "Durable task coordination for native Codex subagents"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+hosted = ["PyYAML==6.0.3", "PyMySQL==1.2.3"]
+legacy-mcp = ["mcp[cli]==2.1.1"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.data-files]
+"share/conductor-coordination" = ["UPSTREAM_LICENSE.txt", "upstream-lock.json"]
