@@ -25,7 +25,10 @@ def build(current: str) -> str:
         raise ValueError("Installer payload markers are missing or duplicated")
     entries = ["$embeddedFiles = @{"]
     for name in FILES:
-        encoded = base64.b64encode((ROOT / name).read_bytes()).decode("ascii")
+        # Git may check out text with CRLF on Windows. Embed the same LF bytes
+        # on every platform so the generated installer stays reproducible.
+        source = (ROOT / name).read_bytes().replace(b"\r\n", b"\n")
+        encoded = base64.b64encode(source).decode("ascii")
         entries.append(f"    '{name}' = '{encoded}'")
     entries.append("}")
     before, rest = current.split(START, 1)
