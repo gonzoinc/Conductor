@@ -45,10 +45,15 @@ Depending on setup, Codex reaches the ledger through a local MCP bridge or a com
 
 ## Choose a setup
 
+- **Local Windows:** one person, no VM. Download the [Windows preview installer](https://github.com/gonzoinc/Conductor/releases/tag/v0.4.0b1), choose Codex desktop, VS Code, or both, and keep task data in a separate folder. Setup downloads a private Python runtime and runs the ledger only when Codex uses it.
 - **Local macOS:** one person, no VM. Needs Python 3.11+, internet for package installation, and a stable local checkout. The SQLite ledger runs through an MCP bridge only while Codex uses it.
 - **Shared Linux VM + Windows client:** a team or multiple computers. The Windows client uses an authorized SSH login and installs one command and the skill. It needs no local Python, MCP package, copied service key, or background tunnel.
 
-The [Windows local GUI](docs/windows-gui-setup.md), [older hosted MCP path](docs/client-setup.md#single-script-windows-hosted-setup), and [guided command-line wizard](docs/guided-setup.md) remain documented for existing setups and migration.
+The [older hosted MCP path](docs/client-setup.md#single-script-windows-hosted-setup) and [guided command-line wizard](docs/guided-setup.md) remain documented for existing setups and migration.
+
+### Local Windows
+
+Download `ConductorSetup.exe` from the [preview release](https://github.com/gonzoinc/Conductor/releases/tag/v0.4.0b1) and run it as your normal Windows user. The app guides you through the install folder, task-data folder, and Codex clients. See the [Windows setup guide](docs/windows-gui-setup.md) for the full walkthrough.
 
 ### Local macOS
 

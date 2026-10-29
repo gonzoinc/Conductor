@@ -1,0 +1,55 @@
+name: Windows preview release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  windows-installer:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    env:
+      RELEASE_TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - name: Verify release source and version
+        shell: pwsh
+        run: |
+          python -B scripts/check_public_tree.py
+          if ($LASTEXITCODE -ne 0) { throw 'Public source check failed.' }
+          python -B scripts/build_windows_installer.py --check
+          if ($LASTEXITCODE -ne 0) { throw 'Installer payload check failed.' }
+          $version = python -c "import pathlib, tomllib; print(tomllib.loads(pathlib.Path('pyproject.toml').read_text(encoding='utf-8'))['project']['version'])"
+          if ($env:RELEASE_TAG -ne "v$version") { throw "Release tag $env:RELEASE_TAG does not match package version $version." }
+          if (-not (Test-Path -LiteralPath "docs/releases/$env:RELEASE_TAG.md")) { throw 'Release notes are missing.' }
+      - name: Test Windows setup
+        shell: pwsh
+        run: python -B -m unittest discover -s tests -p test_gui_setup.py
+      - name: Build installer from public source
+        shell: pwsh
+        run: python -B gui/build_windows.py .
+      - name: Check installer and write checksum
+        shell: pwsh
+        run: |
+          $exe = '.codex/gui-build/dist/ConductorSetup.exe'
+          $process = Start-Process -FilePath (Resolve-Path -LiteralPath $exe).Path -ArgumentList '--self-test' -Wait -PassThru -WindowStyle Hidden
+          if ($process.ExitCode -ne 0) { throw "Installer self-test exited with $($process.ExitCode)." }
+          $hash = (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  ConductorSetup.exe" | Set-Content -LiteralPath '.codex/gui-build/dist/ConductorSetup.exe.sha256' -Encoding ascii
+      - name: Publish preview release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create $env:RELEASE_TAG '.codex/gui-build/dist/ConductorSetup.exe' '.codex/gui-build/dist/ConductorSetup.exe.sha256' --verify-tag --prerelease --title "Conductor $env:RELEASE_TAG" --notes-file "docs/releases/$env:RELEASE_TAG.md"
+          if ($LASTEXITCODE -ne 0) { throw 'GitHub release creation failed.' }
