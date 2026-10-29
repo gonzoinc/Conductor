@@ -1,4 +1,4 @@
-name: Windows preview release
+name: Windows release
 
 on:
   push:
@@ -46,10 +46,12 @@ jobs:
           if ($process.ExitCode -ne 0) { throw "Installer self-test exited with $($process.ExitCode)." }
           $hash = (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash.ToLowerInvariant()
           "$hash  ConductorSetup.exe" | Set-Content -LiteralPath '.codex/gui-build/dist/ConductorSetup.exe.sha256' -Encoding ascii
-      - name: Publish preview release
+      - name: Publish release
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create $env:RELEASE_TAG '.codex/gui-build/dist/ConductorSetup.exe' '.codex/gui-build/dist/ConductorSetup.exe.sha256' --verify-tag --prerelease --title "Conductor $env:RELEASE_TAG" --notes-file "docs/releases/$env:RELEASE_TAG.md"
+          $releaseFlags = @()
+          if ($env:RELEASE_TAG -match '(?:a|b|rc)[0-9]+$') { $releaseFlags += '--prerelease' }
+          gh release create $env:RELEASE_TAG '.codex/gui-build/dist/ConductorSetup.exe' '.codex/gui-build/dist/ConductorSetup.exe.sha256' --verify-tag @releaseFlags --title "Conductor $env:RELEASE_TAG" --notes-file "docs/releases/$env:RELEASE_TAG.md"
           if ($LASTEXITCODE -ne 0) { throw 'GitHub release creation failed.' }

@@ -39,7 +39,7 @@ def dispatch(name, arguments):
 
 
 api._dispatch = dispatch
-mcp = MCPServer("Conductor Native Coordination", version="0.4.0b1", instructions=(
+mcp = MCPServer("Conductor Native Coordination", version="0.4.0", instructions=(
     "Durable metadata for client-owned native Codex subagents. First choose workload shape: "
     "for one coherent task, the main agent performs investigation, implementation, testing "
     "and cleanup directly, without ledger overhead. Mechanical steps within one issue are "

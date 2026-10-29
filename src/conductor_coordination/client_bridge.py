@@ -204,7 +204,7 @@ def build_server(connection: dict | None = None) -> MCPServer:
         coordination_proxy._dispatch = local_dispatch
     else:
         coordination_proxy._dispatch = coordination_proxy._remote
-    server = MCPServer("Conductor", version="0.4.0b1", instructions=(
+    server = MCPServer("Conductor", version="0.4.0", instructions=(
         "First choose workload shape. For one coherent task, work directly, including "
         "investigation, changes, validation and cleanup; no ledger is needed. For multiple "
         "distinct workstreams, manage native workers and record verified results here. "

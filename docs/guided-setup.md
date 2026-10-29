@@ -83,7 +83,7 @@ These commands recheck the saved connection and reestablish its owned SSH tunnel
 
 ## What counts as success
 
-Service health, a private connection file and a passing MCP handshake mean the service connection is ready. They do not establish native delegation in desktop or VS Code. Run the short setup check in the actual client and record its version and exact native worker IDs. Deeper release validation remains separate. This preview still needs those checks before a stable release.
+Service health, a private connection file and a passing MCP handshake mean the service connection is ready. They do not establish native delegation in desktop or VS Code. Run the short setup check in the actual client and record its version and exact native worker IDs.
 
 ## Earlier candidate setups
 
