@@ -50,6 +50,15 @@ def build_source_zip(source: Path, output: Path) -> None:
             raise RuntimeError("The selected source tree is incomplete.")
 
 
+def ensure_builder_pip(python: Path) -> None:
+    """Repair a fresh or reused builder venv created without pip."""
+    probe = subprocess.run([str(python), "-m", "pip", "--version"], capture_output=True, text=True)
+    if probe.returncode != 0:
+        subprocess.run([str(python), "-m", "ensurepip", "--upgrade"], check=True)
+        subprocess.run([str(python), "-m", "pip", "--version"], check=True,
+                       capture_output=True, text=True)
+
+
 def main() -> None:
     if len(sys.argv) != 2:
         raise SystemExit("Usage: py -3 gui/build_windows.py PATH_TO_CONDUCTOR_SOURCE")
@@ -79,6 +88,7 @@ def main() -> None:
     python = venv / "Scripts/python.exe"
     if not python.exists():
         subprocess.run([sys.executable, "-m", "venv", str(venv)], check=True)
+    ensure_builder_pip(python)
     subprocess.run([str(python), "-m", "pip", "install", "--disable-pip-version-check", "--no-cache-dir",
                     f"pyinstaller=={LOCK['pyinstaller_version']}"], check=True)
     add = lambda item: str(build / item) + ";."

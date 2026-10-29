@@ -24,11 +24,22 @@ SERVER_NAME = "conductor_coordination"
 SKILL_NAME = "conductor-coordinator"
 
 
+def windows_user_sid() -> str:
+    identity = subprocess.run(["whoami", "/user", "/fo", "csv", "/nh"], check=True,
+                              text=True, capture_output=True).stdout
+    return next(csv.reader(io.StringIO(identity)))[1]
+
+
+def grant_skill_access(path: Path) -> None:
+    """Keep copied skill files readable and updatable by this Windows user."""
+    if os.name == "nt":
+        subprocess.run(["icacls", str(path), "/grant:r", f"*{windows_user_sid()}:(OI)(CI)(F)", "/T"],
+                       check=True, capture_output=True, text=True)
+
+
 def private_permissions(path: Path) -> None:
     if os.name == "nt":
-        identity = subprocess.run(["whoami", "/user", "/fo", "csv", "/nh"], check=True,
-                                  text=True, capture_output=True).stdout
-        sid = next(csv.reader(io.StringIO(identity)))[1]
+        sid = windows_user_sid()
         rights = "(OI)(CI)(F)" if path.is_dir() else "(F)"
         subprocess.run(["icacls", str(path), "/inheritance:r", "/grant:r", f"*{sid}:{rights}"],
                        check=True, capture_output=True)
@@ -178,6 +189,7 @@ def install(*, codex_home: Path, skills_dir: Path, url: str | None = None, token
         if not skill_target.exists():
             created_skill = True
             shutil.copytree(skill_source, skill_target)
+        grant_skill_access(skill_target)
         if updated != original:
             if original:
                 atomic_write(backup, original)

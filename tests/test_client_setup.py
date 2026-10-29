@@ -88,7 +88,12 @@ class ClientSetupTests(unittest.TestCase):
         self.assertFalse((self.codex / 'conductor-coordination/service-token').exists())
         skill = self.skills / 'conductor-coordinator'
         self.assertIn('conductor_coordination', (skill / 'SKILL.md').read_text())
-        self.assertIn('no shell command', (skill / 'references/workflow.md').read_text())
+        self.assertIn('Local MCP mode uses private SQLite', (skill / 'references/workflow.md').read_text())
+        if os.name == 'nt':
+            sid = installer.windows_user_sid()
+            acl = subprocess.run(['icacls', str(skill), '/findsid', f'*{sid}', '/T'],
+                                 check=True, capture_output=True, text=True)
+            self.assertIn('SKILL.md', acl.stdout)
         if os.name != 'nt':
             self.assertEqual(stat.S_IMODE(database.stat().st_mode), 0o600)
 

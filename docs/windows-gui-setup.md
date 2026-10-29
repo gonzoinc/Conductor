@@ -2,7 +2,7 @@
 
 `ConductorSetup.exe` installs the local, single-user ledger for Codex desktop and the Codex VS Code extension. It downloads a private Python runtime and Python packages during installation, so an internet connection is required. It does not ask for a Git-host token or a Codex API key. To install a shared service on a Linux VM, use [the VM installer](host-install.md) on that VM.
 
-1. Run `ConductorSetup.exe` on Windows 10 or 11 as your normal user.
+1. Run `ConductorSetup.exe` on Windows 10 or 11 as the same normal Windows user who runs Codex. Administrator rights are not needed. Running as another administrator account installs into that account's profile instead.
 2. Pick an app folder and a separate local task-data folder. No VM, Docker, SSH, or service key is needed.
 3. Choose Codex desktop, VS Code, or both. **Separate test profiles** is checked by default and leaves normal Codex settings alone. Clear it only when you want Conductor added to your usual Codex configuration.
 4. Select **Install Conductor**. Progress and errors appear in the app. Fix an error and select the same button again to resume. Cancel stops the current command and can be retried.

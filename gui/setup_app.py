@@ -56,7 +56,7 @@ class SetupApp(tk.Tk):
 
         ttk.Label(self, text="Set up Conductor", font=("Segoe UI", 21, "bold")).pack(anchor="w")
         ttk.Label(self, text="Conductor shares task status between Codex agents on this computer.\n"
-                              "Your project files and Codex login stay here. For a shared Linux service, use the VM installer.", wraplength=640).pack(anchor="w", pady=(8, 22))
+                              "Your project files and Codex login stay here. Run setup as your normal Windows user; administrator rights are not needed. For a shared Linux service, use the VM installer.", wraplength=640).pack(anchor="w", pady=(8, 22))
         self.destination = ttk.LabelFrame(self, text="1  Choose folders", padding=13)
         self.destination.pack(fill="x", pady=13)
         self._path_row(self.destination, "Install Conductor in", self.install_path, directory=True)

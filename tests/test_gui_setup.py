@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import threading
@@ -13,8 +14,9 @@ import zipfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "gui"))
 from setup_controller import (PREVIOUS_SOURCE_SHA256, SetupCancelled, SetupConfig,
+                              _grant_install_access,
                               _ensure_owned, _extract_source, _run, install, validate)
-from build_windows import build_source_zip
+from build_windows import build_source_zip, ensure_builder_pip
 
 
 @unittest.skipUnless(sys.platform == "win32", "Windows installer")
@@ -28,6 +30,29 @@ class SetupTests(unittest.TestCase):
         values = dict(mode="local", install_dir=self.root / "install", state_dir=self.root / "data", profiles=("desktop",))
         values.update(changes)
         return SetupConfig(**values)
+
+    def test_builder_repairs_existing_venv_without_pip(self):
+        venv = self.root / "builder-no-pip"
+        subprocess.run([sys.executable, "-m", "venv", "--without-pip", str(venv)], check=True)
+        python = venv / "Scripts/python.exe"
+        self.assertNotEqual(subprocess.run([str(python), "-m", "pip", "--version"],
+                                          capture_output=True).returncode, 0)
+        ensure_builder_pip(python)
+        subprocess.run([str(python), "-m", "pip", "--version"], check=True, capture_output=True)
+
+    def test_gui_grants_current_user_access_to_installed_runtime(self):
+        runtime = self.root / "install" / "python"
+        runtime.mkdir(parents=True)
+        (runtime / "python.exe").write_bytes(b"fixture")
+        _grant_install_access(runtime.parent)
+        identity = subprocess.run(["whoami", "/user", "/fo", "csv", "/nh"],
+                                  check=True, capture_output=True, text=True).stdout
+        import csv
+        import io
+        sid = next(csv.reader(io.StringIO(identity)))[1]
+        result = subprocess.run(["icacls", str(runtime.parent), "/findsid", f"*{sid}", "/T"],
+                                check=True, capture_output=True, text=True)
+        self.assertIn("python.exe", result.stdout)
 
     def resources(self):
         path = self.root / "resources"

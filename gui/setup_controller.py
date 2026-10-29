@@ -3,7 +3,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from collections import deque
+import csv
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
@@ -151,6 +153,15 @@ def _sha256(path: Path) -> str:
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _grant_install_access(path: Path) -> None:
+    """Give this Windows user access to the GUI-owned runtime and source."""
+    identity = subprocess.run(["whoami", "/user", "/fo", "csv", "/nh"], check=True,
+                              capture_output=True, text=True).stdout
+    sid = next(csv.reader(io.StringIO(identity)))[1]
+    subprocess.run(["icacls", str(path), "/grant:r", f"*{sid}:(OI)(CI)(F)", "/T"],
+                   check=True, capture_output=True, text=True)
 
 
 def _ensure_owned(path: Path, source_digest: str) -> tuple[str, str]:
@@ -301,6 +312,7 @@ def install(config: SetupConfig, resources: Path, progress: Callable[[str], None
         shutil.copy2(uv_source, uv)
         if _sha256(uv) != lock["uv_exe_sha256"]:
             raise ValueError("The copied Python downloader failed its integrity check.")
+    _grant_install_access(install_dir)
     state = install_dir / "python"
     cache = install_dir / "download-cache"
     state.mkdir(exist_ok=True)
@@ -327,5 +339,6 @@ def install(config: SetupConfig, resources: Path, progress: Callable[[str], None
         arguments += ["--local-state-root", str(_local_path(config.state_dir)), "--db-path", str(_local_path(config.state_dir) / "tasks.sqlite3")]
         _run([str(python), str(source / "scripts/bootstrap.py"), str(source), *arguments],
              env=env, cancel=cancel, progress=progress)
+    _grant_install_access(install_dir)
     progress("Conductor setup is complete.")
     return install_dir
