@@ -65,7 +65,32 @@ class ClientSetupTests(unittest.TestCase):
         self.assertTrue(first["changed_config"])
         self.assertFalse(self.install()["changed_config"])
         self.assertEqual((self.codex / "config.toml").read_bytes(), config)
-        self.assertEqual((self.codex / "config.toml.before-conductor").read_bytes(), original)
+        self.assertFalse((self.codex / "config.toml.before-conductor").exists())
+
+    def test_existing_legacy_backup_does_not_block_current_config_merge(self):
+        self.codex.mkdir()
+        original = b'model = "current"\n[mcp_servers.other]\ncommand = "other"\n'
+        old_backup = b'model = "older"\n'
+        config = self.codex / "config.toml"
+        backup = self.codex / "config.toml.before-conductor"
+        config.write_bytes(original)
+        backup.write_bytes(old_backup)
+        self.install()
+        self.assertTrue(config.read_bytes().startswith(original))
+        self.assertEqual(backup.read_bytes(), old_backup)
+        self.assertEqual(list(self.codex.glob("config.toml.before-conductor*")), [backup])
+
+    def test_config_change_during_setup_is_preserved_for_retry(self):
+        self.codex.mkdir()
+        config = self.codex / "config.toml"
+        config.write_bytes(b'model = "before"\n')
+        changed = b'model = "changed-during-setup"\n'
+        with mock.patch.object(installer, "grant_skill_access", side_effect=lambda _: config.write_bytes(changed)):
+            with self.assertRaisesRegex(ValueError, "changed during setup"):
+                self.install()
+        self.assertEqual(config.read_bytes(), changed)
+        self.assertFalse((self.skills / "conductor-coordinator").exists())
+        self.assertFalse((self.codex / "conductor-coordination").exists())
 
     def test_local_user_install_preserves_ledger_and_explains_mcp_transport(self):
         self.codex.mkdir()
@@ -83,7 +108,7 @@ class ClientSetupTests(unittest.TestCase):
         installed_config = config.read_bytes()
         self.assertFalse(self.install(**options)['changed_config'])
         self.assertEqual(config.read_bytes(), installed_config)
-        self.assertEqual((self.codex / 'config.toml.before-conductor').read_bytes(), original)
+        self.assertFalse((self.codex / 'config.toml.before-conductor').exists())
         self.assertEqual(Store(database).snapshot('retained-work')['workload']['manager'], 'manager')
         self.assertFalse((self.codex / 'conductor-coordination/service-token').exists())
         skill = self.skills / 'conductor-coordinator'
@@ -144,7 +169,7 @@ class ClientSetupTests(unittest.TestCase):
         self.assertFalse((self.codex / "config.toml").exists())
         self.assertFalse(self.skills.exists())
 
-    def test_failed_config_write_rolls_back_new_credential_skill_and_backup(self):
+    def test_failed_config_write_rolls_back_new_credential_and_skill(self):
         self.codex.mkdir()
         original = b'model = "user-model"\n'
         config = self.codex / "config.toml"

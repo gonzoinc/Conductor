@@ -2,7 +2,7 @@
 
 Codex needs its own sign-in and native subagent controls. The stdio MCP bridge can use a private SQLite ledger on this computer, or connect to a hosted service. Local mode needs no VM, container, listener, or service key; the bridge runs only while Codex uses it. Hosted mode reads a private per-user key file. No bearer token is stored in TOML or passed as a command argument.
 
-Automated client setup and stdio protocol checks cover Linux and Windows with local private storage. Windows tests include private ACL creation and rejection of a broadly readable credential. An isolated macOS/Python 3.14 install and unchanged rerun passed, including discovery of 14 tools, coordination health, configuration preservation and backup checks. The macOS command below verifies its installed stdio bridge before reporting success. These checks do not establish actual desktop or VS Code native delegation acceptance.
+Automated client setup and stdio protocol checks cover Linux and Windows with local private storage. Windows tests include private ACL creation and rejection of a broadly readable credential. An isolated macOS/Python 3.14 install and unchanged rerun passed, including discovery of 14 tools, coordination health and configuration preservation. The macOS command below verifies its installed stdio bridge before reporting success. These checks do not establish actual desktop or VS Code native delegation acceptance.
 
 ## Start here if this is your first installation
 
@@ -21,7 +21,7 @@ The script uses the existing client installer and creates:
 - The self-contained skill in `~/.agents/skills/conductor-coordinator` and private connection settings under the selected Codex home's `conductor-coordination` directory.
 - A private SQLite ledger at `${XDG_STATE_HOME:-~/.local/state}/conductor/tasks.sqlite3`, shared by both clients. Keep it on a local disk outside synced/network folders.
 
-Existing unrelated configuration is preserved byte for byte and backed up to `config.toml.before-conductor` when an existing file changes. An identical rerun preserves settings and ledger data. A conflicting Conductor connection, skill, settings file, or unowned nonempty data directory stops installation for manual review. Resolve the conflict before rerunning; the script does not silently replace it. A failed package download can be retried with the same command.
+Existing unrelated configuration is preserved byte for byte. The installer adds only the Conductor MCP table, checks the resulting TOML, verifies the current file has not changed during setup, and replaces it atomically. It creates no configuration backup. An identical rerun preserves settings and ledger data. A conflicting Conductor connection, skill, settings file, or unowned nonempty data directory stops installation for manual review. Resolve the conflict before rerunning; the script does not silently replace it. A failed package download can be retried with the same command.
 
 Before reporting completion, the script starts the installed bridge, initializes a real stdio MCP session, discovers its 14 tools and calls `coordination_health`. This does not open or restart either app. After active work is finished, restart Codex desktop, reload the VS Code window and start new chats. If using a custom `CODEX_HOME`, ensure both applications actually run with that same profile; exporting it in a terminal does not change an already-running app. Run the [quick setup check](acceptance.md#quick-setup-check) in each client to verify native worker support. Installation cannot enable missing native controls or override organization policy.
 
@@ -85,7 +85,7 @@ bash install.sh server --export-token /path/to/private/service-token
 
 The helper refuses overwrites and does not print the credential. Transfer that file using your existing secure administrative route. Keep it out of chat, source control, screenshots and shell history. On POSIX, make the transferred file mode `0600`. The lower-level Python installer also supports a hidden prompt; the shell entry point requires a private file so redirected shell input cannot cause a credential to echo. The installer copies it privately and does not print it. It sets private modes on POSIX and uses current-user Windows ACLs for its own credential/settings files. It refuses a second skill copy if a legacy `conductor-coordinator` already exists under the Codex home.
 
-When using `--configure-user`, this adds the `conductor_coordination` MCP entry in `~/.codex/config.toml` (or `$CODEX_HOME/config.toml`) and copies the self-contained `conductor-coordinator` skill to `~/.agents/skills`. The lower-level Python installer supports `--codex-home` and `--skills-dir`; the shell entry point selects both automatically for isolated profiles. It preserves other settings and makes a private `config.toml.before-conductor` backup when modifying an existing configuration.
+When using `--configure-user`, this adds the `conductor_coordination` MCP entry in `~/.codex/config.toml` (or `$CODEX_HOME/config.toml`) and copies the self-contained `conductor-coordinator` skill to `~/.agents/skills`. The lower-level Python installer supports `--codex-home` and `--skills-dir`; the shell entry point selects both automatically for isolated profiles. It preserves other settings without creating a configuration backup.
 
 An identical rerun makes no config changes and does not rotate the token. A conflicting server, credential, settings file or skill stops installation for manual review. Existing user files are not silently replaced. Keep the source token file only as long as needed for your secure provisioning/recovery process.
 
@@ -121,6 +121,6 @@ Official references: [MCP configuration](https://learn.chatgpt.com/docs/extend/m
 
 ## Removal or relocation
 
-Stop using the workflow and reconcile active workers before removal. Remove only the `conductor_coordination` MCP table, the installed `conductor-coordinator` skill and its private `conductor-coordination` settings directory after reviewing their ownership. Preserve unrelated configuration, and keep the backup until no longer needed. Removing the client does not delete the server database or stop native workers.
+Stop using the workflow and reconcile active workers before removal. Remove only the `conductor_coordination` MCP table, the installed `conductor-coordinator` skill and its private `conductor-coordination` settings directory after reviewing their ownership. Preserve unrelated configuration. Older installations may have a `config.toml.before-conductor` file; the current installer does not use or create it. Removing the client does not delete the server database or stop native workers.
 
 Moving/deleting the clone's virtual environment breaks the recorded executable path. Review/remove the old entry before reinstalling with the new path; the installer intentionally refuses to overwrite a different connection.

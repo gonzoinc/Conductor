@@ -151,9 +151,6 @@ def install(*, codex_home: Path, skills_dir: Path, url: str | None = None, token
         targets = {path.relative_to(skill_target): path.read_bytes() for path in skill_target.rglob("*") if path.is_file()}
         if targets != sources or any(path.is_symlink() for path in skill_target.rglob("*")):
             raise ValueError("A different conductor-coordinator skill is installed; preserve or remove it manually first")
-    backup = codex_home / "config.toml.before-conductor"
-    if updated != original and original and backup.exists():
-        raise ValueError("Configuration backup already exists; review it before changing configuration")
     created_files = []
     created_dirs = []
     created_skill = False
@@ -191,9 +188,10 @@ def install(*, codex_home: Path, skills_dir: Path, url: str | None = None, token
             shutil.copytree(skill_source, skill_target)
         grant_skill_access(skill_target)
         if updated != original:
-            if original:
-                atomic_write(backup, original)
-                created_files.append(backup)
+            safe_target(config_path)
+            current = config_path.read_bytes() if config_path.exists() else b""
+            if current != original:
+                raise ValueError("Codex configuration changed during setup; rerun to merge the latest settings")
             atomic_write(config_path, updated)
     except BaseException:
         if created_skill and skill_target.exists():

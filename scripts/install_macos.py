@@ -29,7 +29,7 @@ def setup(root: Path) -> None:
     print('Conductor local setup complete.')
     print('Codex configuration: ' + str(codex_home / 'config.toml'))
     print('Skill: ' + str(skills_dir / 'conductor-coordinator'))
-    print('Existing configuration is preserved; when changed, its backup is config.toml.before-conductor.')
+    print('Existing configuration is preserved; setup does not create a configuration backup.')
     print('Keep this checkout in place. Restart Codex desktop and reload the VS Code window when your active work is finished, then start new chats.')
     print('Both clients must use this same Codex home. Installation does not enable native subagent controls or override organization policies.')
 
