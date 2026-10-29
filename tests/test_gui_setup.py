@@ -14,7 +14,6 @@ import zipfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "gui"))
 from setup_controller import (SetupCancelled, SetupConfig,
-                              _grant_install_access,
                               _ensure_owned, _extract_source, _run, install, validate)
 from build_windows import build_source_zip, ensure_builder_pip
 
@@ -39,20 +38,6 @@ class SetupTests(unittest.TestCase):
                                           capture_output=True).returncode, 0)
         ensure_builder_pip(python)
         subprocess.run([str(python), "-m", "pip", "--version"], check=True, capture_output=True)
-
-    def test_gui_grants_current_user_access_to_installed_runtime(self):
-        runtime = self.root / "install" / "python"
-        runtime.mkdir(parents=True)
-        (runtime / "python.exe").write_bytes(b"fixture")
-        _grant_install_access(runtime.parent)
-        identity = subprocess.run(["whoami", "/user", "/fo", "csv", "/nh"],
-                                  check=True, capture_output=True, text=True).stdout
-        import csv
-        import io
-        sid = next(csv.reader(io.StringIO(identity)))[1]
-        result = subprocess.run(["icacls", str(runtime.parent), "/findsid", f"*{sid}", "/T"],
-                                check=True, capture_output=True, text=True)
-        self.assertIn("python.exe", result.stdout)
 
     def resources(self):
         path = self.root / "resources"
@@ -204,6 +189,7 @@ class SetupTests(unittest.TestCase):
                 python.parent.mkdir(parents=True, exist_ok=True)
                 python.touch()
         with mock.patch("setup_controller._run", side_effect=fake_run), \
+             mock.patch("setup_controller.subprocess.run", side_effect=AssertionError("Installer must not change folder permissions")), \
              mock.patch("subprocess.check_output", return_value=str(python) + "\n"):
             install(config, resources, lambda _: None, threading.Event())
             install(config, resources, lambda _: None, threading.Event())
