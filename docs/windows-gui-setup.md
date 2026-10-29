@@ -5,7 +5,7 @@
 1. Run `ConductorSetup.exe` on Windows 10 or 11 as the same normal Windows user who runs Codex. Administrator rights are not needed. Running as another administrator account installs into that account's profile instead.
 2. Pick an app folder and a separate local task-data folder. No VM, Docker, SSH, or service key is needed.
 3. Choose Codex desktop, VS Code, or both. **Separate test profiles** is checked by default and leaves normal Codex settings alone. Clear it only when you want Conductor added to your usual Codex configuration.
-4. Select **Install Conductor**. Progress and errors appear in the app. Fix an error and select the same button again to resume. Cancel stops the current command and can be retried.
+4. Select **Install Conductor**. Progress and errors appear in the app. Fix an error and select the same button again to resume. Cancel stops the current command and can be retried. A newer setup package can reuse an earlier Conductor-owned app folder; it stages updated source inside that folder and preserves the earlier source during setup.
 
 The app bundles a pinned, checksum-verified `uv.exe` and uses it to download a pinned Python 3.12 runtime into the selected app folder. It then installs the local Conductor client and writes the selected Codex connections. Task data stays in the chosen local folder. The app does not start Codex automatically.
 

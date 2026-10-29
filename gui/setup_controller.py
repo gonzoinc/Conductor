@@ -9,6 +9,7 @@ import io
 import json
 import os
 from pathlib import Path
+import re
 import stat
 import shutil
 import subprocess
@@ -22,7 +23,6 @@ from client_launch import launch_isolated
 
 PYTHON_VERSION = "3.12.15"
 OWNERSHIP = {"product": "conductor-codex", "purpose": "windows-gui-install", "version": 1}
-PREVIOUS_SOURCE_SHA256 = "4b1ca2ae9adc1ed7830459ade6b279766673652cb528f08bdecf8d4f4703dfe1"
 
 
 @dataclass(frozen=True)
@@ -173,7 +173,8 @@ def _ensure_owned(path: Path, source_digest: str) -> tuple[str, str]:
         saved = json.loads(marker.read_text(encoding="utf-8"))
         if saved == identity:
             return "source", "test-profiles"
-        if saved == dict(OWNERSHIP, source_sha256=PREVIOUS_SOURCE_SHA256):
+        if (isinstance(saved, dict) and all(saved.get(key) == value for key, value in OWNERSHIP.items())
+                and re.fullmatch(r"[0-9a-f]{64}", str(saved.get("source_sha256", "")))):
             suffix = source_digest[:12]
             return f"source-{suffix}", f"test-profiles-{suffix}"
         raise ValueError(f"This folder is unowned or belongs to another Conductor version: {path}. Choose a new folder; existing files were preserved.")

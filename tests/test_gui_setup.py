@@ -13,7 +13,7 @@ from unittest import mock
 import zipfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "gui"))
-from setup_controller import (PREVIOUS_SOURCE_SHA256, SetupCancelled, SetupConfig,
+from setup_controller import (SetupCancelled, SetupConfig,
                               _grant_install_access,
                               _ensure_owned, _extract_source, _run, install, validate)
 from build_windows import build_source_zip, ensure_builder_pip
@@ -153,8 +153,9 @@ class SetupTests(unittest.TestCase):
         destination = self.root / "install"
         destination.mkdir()
         marker = destination / ".conductor-gui-install.json"
+        old_digest = "a" * 64
         marker.write_text(json.dumps({"product": "conductor-codex", "purpose": "windows-gui-install",
-                                      "version": 1, "source_sha256": PREVIOUS_SOURCE_SHA256}))
+                                      "version": 1, "source_sha256": old_digest}))
         old = destination / "source/user-preserved.txt"
         old.parent.mkdir()
         old.write_text("old source remains")
@@ -166,7 +167,17 @@ class SetupTests(unittest.TestCase):
         _extract_source(archive, destination, digest, source_name)
         _extract_source(archive, destination, digest, source_name)
         self.assertEqual(old.read_text(), "old source remains")
-        self.assertEqual(json.loads(marker.read_text())["source_sha256"], PREVIOUS_SOURCE_SHA256)
+        self.assertEqual(json.loads(marker.read_text())["source_sha256"], old_digest)
+
+    def test_previous_install_requires_valid_ownership_digest(self):
+        destination = self.root / "install"
+        destination.mkdir()
+        marker = destination / ".conductor-gui-install.json"
+        marker.write_text(json.dumps({"product": "conductor-codex", "purpose": "windows-gui-install",
+                                      "version": 1, "source_sha256": "not-a-digest"}))
+        with self.assertRaisesRegex(ValueError, "unowned"):
+            _ensure_owned(destination, "b" * 64)
+        self.assertEqual(list(destination.iterdir()), [marker])
 
     def test_failing_step_includes_its_actual_diagnostic(self):
         lines = []
