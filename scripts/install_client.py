@@ -18,6 +18,7 @@ import sys
 import tempfile
 import tomllib
 
+from conductor_coordination.state_paths import validate_shared_windows_path
 from conductor_coordination.client_bridge import local_state_root, read_private, validate_local_database, validate_url
 
 SERVER_NAME = "conductor_coordination"
@@ -81,6 +82,7 @@ def install(*, codex_home: Path, skills_dir: Path, url: str | None = None, token
         if token is not None or url is not None or ssh_target is not None:
             raise ValueError("Local setup uses no service URL or credential")
         data_root = (data_root or local_state_root()).expanduser().absolute()
+        validate_shared_windows_path(data_root)
         db_path = validate_local_database(db_path or data_root / "tasks.sqlite3", data_root)
     else:
         raise ValueError("Unknown Conductor client mode")
@@ -93,6 +95,10 @@ def install(*, codex_home: Path, skills_dir: Path, url: str | None = None, token
     settings_dir = codex_home / "conductor-coordination"
     token_path = settings_dir / "service-token"
     settings_path = settings_dir / "client.json"
+    if mode == "local" and settings_path.exists():
+        saved = json.loads(read_private(settings_path))
+        if saved.get("mode") == "local" and not Path(saved["db_path"]).is_file():
+            raise ValueError(f"Configured ledger is missing: {saved['db_path']}. Use explicit repair; no empty replacement was created.")
     data_marker = data_root / ".conductor-local-owner.json" if mode == "local" else None
     marker_content = b'{"purpose":"conductor-local-state","version":1}\n'
     skill_source = source_root / "skills" / SKILL_NAME

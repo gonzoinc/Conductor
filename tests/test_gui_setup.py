@@ -30,6 +30,10 @@ class SetupTests(unittest.TestCase):
         values.update(changes)
         return SetupConfig(**values)
 
+    def test_rejects_redirectable_task_data(self):
+        with self.assertRaisesRegex(ValueError, "resolve differently"):
+            validate(self.config(state_dir=Path.home() / "AppData/Local/Conductor"))
+
     def test_builder_repairs_existing_venv_without_pip(self):
         venv = self.root / "builder-no-pip"
         subprocess.run([sys.executable, "-m", "venv", "--without-pip", str(venv)], check=True)
@@ -59,6 +63,8 @@ class SetupTests(unittest.TestCase):
             names = set(archive.namelist())
         self.assertIn("scripts/bootstrap.py", names)
         self.assertIn("scripts/install_client.py", names)
+        self.assertIn("scripts/repair_local.py", names)
+        self.assertIn("src/conductor_coordination/state_paths.py", names)
         self.assertNotIn("install-vm.sh", names)
         self.assertNotIn("scripts/install_host.py", names)
         self.assertFalse(any(name.startswith("deploy/") for name in names))

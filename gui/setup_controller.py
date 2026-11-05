@@ -19,6 +19,10 @@ import zipfile
 from client_launch import launch_isolated
 
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from conductor_coordination.state_paths import local_state_root, validate_shared_windows_path
+
+
 PYTHON_VERSION = "3.12.15"
 OWNERSHIP = {"product": "conductor-codex", "purpose": "windows-gui-install", "version": 1}
 
@@ -139,6 +143,7 @@ def validate(config: SetupConfig) -> SetupConfig:
     if config.state_dir is None:
         raise ValueError("Choose where Conductor should keep its local task data.")
     state = _local_path(config.state_dir)
+    validate_shared_windows_path(state)
     install = _local_path(config.install_dir)
     if state == install or state.is_relative_to(install) or install.is_relative_to(state):
         raise ValueError("Choose separate folders for the app and task data.")
@@ -328,5 +333,5 @@ def install(config: SetupConfig, resources: Path, progress: Callable[[str], None
         arguments += ["--local-state-root", str(_local_path(config.state_dir)), "--db-path", str(_local_path(config.state_dir) / "tasks.sqlite3")]
         _run([str(python), str(source / "scripts/bootstrap.py"), str(source), *arguments],
              env=env, cancel=cancel, progress=progress)
-    progress("Conductor setup is complete.")
+    progress("Conductor installation is complete. Desktop and VS Code verification is pending; restart both clients and run the cross-client acceptance checks.")
     return install_dir

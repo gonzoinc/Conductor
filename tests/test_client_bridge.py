@@ -9,12 +9,26 @@ import tempfile
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import unittest
+from unittest import mock
+
+from conductor_coordination import client_bridge
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
 
 class BridgeSessionTests(unittest.IsolatedAsyncioTestCase):
+    def test_missing_local_ledger_explains_redirection_without_creating_file(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            database = root / "tasks.sqlite3"
+            settings = json.dumps({"mode": "local", "db_path": str(database), "state_root": str(root)})
+            with mock.patch.object(client_bridge, "read_private", return_value=settings):
+                with self.assertRaisesRegex(ValueError, "packaged Desktop and VS Code") as error:
+                    client_bridge.configure(root / "client.json")
+            self.assertIn(str(database), str(error.exception))
+            self.assertFalse(database.exists())
+
     async def test_native_stdio_session_discovers_and_forwards_fourteen_tools(self):
         token = "stdio-session-test-" + "y" * 40
         observations = []

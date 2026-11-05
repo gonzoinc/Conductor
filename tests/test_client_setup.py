@@ -122,6 +122,18 @@ class ClientSetupTests(unittest.TestCase):
         if os.name != 'nt':
             self.assertEqual(stat.S_IMODE(database.stat().st_mode), 0o600)
 
+    def test_repeat_local_install_does_not_recreate_missing_ledger(self):
+        options = dict(mode="local", url=None, token=None, data_root=self.root / "state")
+        self.install(**options)
+        settings_path = self.codex / "conductor-coordination/client.json"
+        before = settings_path.read_bytes()
+        database = Path(json.loads(before)["db_path"])
+        database.unlink()
+        with self.assertRaisesRegex(ValueError, "no empty replacement"):
+            self.install(**options)
+        self.assertFalse(database.exists())
+        self.assertEqual(settings_path.read_bytes(), before)
+
     def test_installer_command_uses_token_file_without_printing_credential(self):
         credential = self.root / "incoming-token"
         credential.write_text(self.token)
