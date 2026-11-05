@@ -20,6 +20,10 @@ import urllib.error
 import urllib.request
 
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from conductor_coordination.state_paths import local_state_root
+
+
 def protect(path: Path) -> None:
     if os.name == 'nt':
         result = subprocess.run(['whoami', '/user', '/fo', 'csv', '/nh'], check=True, capture_output=True, text=True)
@@ -49,10 +53,7 @@ def private_write(path: Path, data: bytes, *, replace: bool = False) -> None:
 def local_database_path(identifier: str) -> Path:
     if not re.fullmatch(r'[a-f0-9]{8}', identifier):
         raise ValueError('Invalid local setup identifier')
-    if os.name == 'nt':
-        base = Path(os.environ.get('LOCALAPPDATA') or Path.home() / 'AppData/Local') / 'Conductor'
-    else:
-        base = Path(os.environ.get('XDG_STATE_HOME') or Path.home() / '.local/state') / 'conductor'
+    base = local_state_root()
     return (base / 'guided' / identifier / 'tasks.sqlite3').absolute()
 
 

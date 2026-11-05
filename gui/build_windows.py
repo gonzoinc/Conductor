@@ -33,7 +33,7 @@ def build_source_zip(source: Path, output: Path) -> None:
     with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         candidates = [source / name for name in roots]
         candidates.extend(source / "scripts" / name for name in
-                          ("bootstrap.py", "install_client.py", "legacy_install.py"))
+                          ("bootstrap.py", "install_client.py", "legacy_install.py", "repair_local.py"))
         for name in prefixes:
             folder = source / name
             if folder.is_dir():
@@ -97,7 +97,7 @@ def main() -> None:
     environment = dict(os.environ, PYINSTALLER_CONFIG_DIR=str(build / "pyinstaller-cache"),
                        TEMP=str(build / "tmp"), TMP=str(build / "tmp"), TMPDIR=str(build / "tmp"))
     subprocess.run([str(python), "-m", "PyInstaller", "--noconfirm", "--clean", "--onefile", "--windowed",
-                    "--name", "ConductorSetup", "--distpath", str(build / "dist"), "--workpath", str(build / "work"),
+                    "--paths", str(source / "src"), "--name", "ConductorSetup", "--distpath", str(build / "dist"), "--workpath", str(build / "work"),
                     "--specpath", str(build), "--add-data", add("uv.exe"), "--add-data", add("conductor-source.zip"),
                     "--add-data", add("runtime-lock.json"), str(GUI / "setup_app.py")], check=True,
                    env=environment)

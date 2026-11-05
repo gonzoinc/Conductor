@@ -12,6 +12,10 @@ import sys
 import tomllib
 
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from conductor_coordination.state_paths import local_state_root
+
+
 def run(command: list[str], *, root: Path, env: dict[str, str], stage: str, quiet: bool = False) -> None:
     print(stage + '...', flush=True)
     subprocess.run(command, cwd=root, env=env, check=True, **({"stdout": subprocess.PIPE} if quiet else {}))
@@ -154,10 +158,7 @@ def setup(root: Path, arguments: list[str], *, prepared_runtime: Path | None = N
     else:
         if args.token_file or args.url or args.ssh_target:
             raise ValueError('Local mode does not use a service URL or token file')
-        if os.name == 'nt':
-            default_root = Path(os.environ.get('LOCALAPPDATA') or Path.home() / 'AppData/Local') / 'Conductor'
-        else:
-            default_root = Path(os.environ.get('XDG_STATE_HOME') or Path.home() / '.local/state') / 'conductor'
+        default_root = local_state_root()
         state_root = (args.local_state_root or default_root).expanduser().absolute()
         database = (args.db_path or state_root / 'tasks.sqlite3').expanduser().absolute()
         # The installed client performs the full local-disk and private-path checks.

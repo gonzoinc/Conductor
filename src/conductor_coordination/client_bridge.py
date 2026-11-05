@@ -18,6 +18,7 @@ import urllib.parse
 from mcp.server import MCPServer
 
 from conductor_coordination import coordination_proxy
+from conductor_coordination.state_paths import local_state_root
 
 
 _SSH_TUNNEL = None
@@ -117,14 +118,6 @@ def read_private(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def local_state_root() -> Path:
-    if os.name == "nt":
-        base = Path(os.environ.get("LOCALAPPDATA") or Path.home() / "AppData/Local")
-        return base / "Conductor"
-    base = Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local/state")
-    return base / "conductor"
-
-
 def validate_local_database(path: Path, state_root: Path | None = None) -> Path:
     path = path.expanduser().absolute()
     root = (state_root or local_state_root()).expanduser().absolute()
@@ -170,6 +163,10 @@ def configure(settings_path: Path) -> dict:
     if mode == "local":
         state_root = Path(settings["state_root"]) if "state_root" in settings else local_state_root()
         database = validate_local_database(Path(settings["db_path"]), state_root)
+        if not database.is_file():
+            raise ValueError(f"Configured Conductor ledger is missing or not a regular file: {database}. "
+                             "On Windows, packaged Desktop and VS Code may see different AppData paths. "
+                             "Use explicit ledger repair; no replacement database was created.")
         ensure_private(state_root, directory=True)
         ensure_private(database.parent, directory=True)
         ensure_private(database)
@@ -204,7 +201,7 @@ def build_server(connection: dict | None = None) -> MCPServer:
         coordination_proxy._dispatch = local_dispatch
     else:
         coordination_proxy._dispatch = coordination_proxy._remote
-    server = MCPServer("Conductor", version="0.4.0", instructions=(
+    server = MCPServer("Conductor", version="0.4.1", instructions=(
         "First choose workload shape. For one coherent task, work directly, including "
         "investigation, changes, validation and cleanup; no ledger is needed. For multiple "
         "distinct workstreams, manage native workers and record verified results here. "

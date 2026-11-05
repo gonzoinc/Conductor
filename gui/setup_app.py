@@ -11,7 +11,7 @@ import tkinter as tk
 from tkinter import filedialog, ttk
 
 from setup_controller import (SetupCancelled, SetupConfig, completed_setup, install,
-                              installed_setup, launch_test_profile)
+                              installed_setup, launch_test_profile, local_state_root)
 from workflow_window import WorkflowWindow
 
 
@@ -27,7 +27,7 @@ class SetupApp(tk.Tk):
         self.configure(padx=28, pady=22)
         local = Path(os.environ.get("LOCALAPPDATA", str(Path.home() / "AppData/Local")))
         self.install_path = tk.StringVar(value=str(local / "Programs/Conductor"))
-        self.data_path = tk.StringVar(value=str(local / "Conductor"))
+        self.data_path = tk.StringVar(value=str(local_state_root()))
         self.desktop = tk.BooleanVar(value=True)
         self.vscode = tk.BooleanVar(value=False)
         self.isolated = tk.BooleanVar(value=True)
